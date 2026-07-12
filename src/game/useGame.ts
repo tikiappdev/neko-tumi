@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { advanceMovingCat, createInitialGameState, placeMovingCat } from './engine'
+import { advanceMovingCat, advanceTowerSway, createInitialGameState, placeMovingCat } from './engine'
+import { MAX_TOWER_TILT_DEGREES } from './config'
 import { backgroundForFloor } from './unlocks'
 import type { CatId, GameMode, GameState } from './types'
 import type { CatBlock as ViewBlock, CatKind } from '../components/types'
@@ -20,6 +21,10 @@ export function useGame(mode: GameMode, unlockedCatIds: CatId[], bestScore: numb
   const [activeY, setActiveY] = useState(ACTIVE_Y)
   const [effect, setEffect] = useState<Effect>(null)
   const [announcement, setAnnouncement] = useState('ねこが うごいています。タップで おとそう！')
+  const [towerTilt, setTowerTilt] = useState(0)
+  const towerTiltRef = useRef(0)
+  const tiltVelocityRef = useRef(0)
+  const reducedMotionRef = useRef(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
   const timeoutIds = useRef<number[]>([])
   const onCompleteRef = useRef(onComplete)
   useEffect(() => { onCompleteRef.current = onComplete }, [onComplete])
@@ -35,6 +40,16 @@ export function useGame(mode: GameMode, unlockedCatIds: CatId[], bestScore: numb
         const current = gameRef.current
         updateGame({ ...current, moving: advanceMovingCat(current.moving, elapsed, current.floor, current.mode) })
       }
+      const balance = gameRef.current.mode === 'balance' ? gameRef.current.balance : 0
+      if (reducedMotionRef.current) {
+        towerTiltRef.current = balance * MAX_TOWER_TILT_DEGREES
+        tiltVelocityRef.current = 0
+      } else {
+        const sway = advanceTowerSway(towerTiltRef.current, tiltVelocityRef.current, balance, elapsed)
+        towerTiltRef.current = sway.tilt
+        tiltVelocityRef.current = sway.velocity
+      }
+      setTowerTilt(towerTiltRef.current)
       frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
@@ -51,6 +66,7 @@ export function useGame(mode: GameMode, unlockedCatIds: CatId[], bestScore: numb
 
   const reset = useCallback(() => {
     timeoutIds.current.forEach(window.clearTimeout); timeoutIds.current = []
+    towerTiltRef.current = 0; tiltVelocityRef.current = 0; setTowerTilt(0)
     updateGame(createInitialGameState(mode)); setBlocks([]); setActiveY(ACTIVE_Y); setEffect(null)
     setAnnouncement('ねこが うごいています。タップで おとそう！'); updatePhase('moving')
   }, [mode, updateGame])
@@ -70,6 +86,7 @@ export function useGame(mode: GameMode, unlockedCatIds: CatId[], bestScore: numb
       const kind = catAt(unlockedCatIds, placedFloor)
       const placed: ViewBlock = { id: `${placedFloor}-${kind}`, x: result.placement.block.x, y: 4, width: result.placement.block.width, kind: kind as CatKind, state: result.placement.perfect ? 'perfect' : 'landing' }
       setBlocks((current) => [...current, placed].slice(-10).map((block, i) => ({ ...block, y: i * FLOOR_STEP + 4 })))
+      tiltVelocityRef.current += (result.state.balance - before.balance) * 11
       updateGame(result.state)
       if (result.toppled) {
         setEffect('miss'); setAnnouncement(`バランスが ${result.state.balance > 0 ? 'みぎ' : 'ひだり'}に くずれた！`); updatePhase('gameOver')
@@ -85,5 +102,5 @@ export function useGame(mode: GameMode, unlockedCatIds: CatId[], bestScore: numb
 
   const activeKind = catAt(unlockedCatIds, game.floor)
   const active: ViewBlock | null = phase === 'gameOver' && game.balance !== 0 ? null : { id: `active-${game.floor}`, x: game.moving.x, y: activeY, width: game.moving.width, kind: activeKind as CatKind, state: phase === 'gameOver' ? 'falling' : phase === 'dropping' ? 'landing' : 'settled' }
-  return { game, blocks, active, phase, effect, announcement, background: backgroundForFloor(game.floor), drop, reset }
+  return { game, blocks, active, phase, effect, announcement, towerTilt, background: backgroundForFloor(game.floor), drop, reset }
 }

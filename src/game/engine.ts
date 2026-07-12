@@ -1,4 +1,4 @@
-import { BALANCE_MEMORY, BALANCE_TOPPLE_LIMIT, catWidthForFloor, INITIAL_CAT_WIDTH, LOGICAL_WIDTH, PERFECT_BALANCE_RECOVERY, perfectTolerance, speedForFloor } from './config';
+import { BALANCE_MEMORY, BALANCE_TOPPLE_LIMIT, catWidthForFloor, INITIAL_CAT_WIDTH, LOGICAL_WIDTH, MAX_TOWER_TILT_DEGREES, PERFECT_BALANCE_RECOVERY, perfectTolerance, speedForFloor, SWAY_DAMPING, SWAY_SPRING } from './config';
 import { scorePlacement } from './scoring';
 import type { CatBlock, DropResult, GameMode, GameState, MovingCat, PlacementResult } from './types';
 
@@ -44,6 +44,14 @@ export function advanceMovingCat(cat: MovingCat, elapsedSeconds: number, floor =
     }
   }
   return { ...cat, x: position, direction };
+}
+
+export function advanceTowerSway(tilt: number, velocity: number, balance: number, elapsedSeconds: number) {
+  const elapsed = Math.min(0.05, Math.max(0, elapsedSeconds));
+  const target = Math.max(-1, Math.min(1, balance)) * MAX_TOWER_TILT_DEGREES;
+  const acceleration = (target - tilt) * SWAY_SPRING - velocity * SWAY_DAMPING;
+  const nextVelocity = velocity + acceleration * elapsed;
+  return { tilt: tilt + nextVelocity * elapsed, velocity: nextVelocity };
 }
 
 export function createInitialGameState(mode: GameMode = 'normal'): GameState {

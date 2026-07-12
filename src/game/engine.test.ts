@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advanceMovingCat, createInitialGameState, getOverlap, judgePlacement, placeMovingCat } from './engine';
+import { advanceMovingCat, advanceTowerSway, createInitialGameState, getOverlap, judgePlacement, placeMovingCat } from './engine';
 
 describe('game engine', () => {
   it('creates the expected easy initial state', () => {
@@ -78,5 +78,13 @@ describe('game engine', () => {
     expect(result.placement.success).toBe(true);
     expect(result.toppled).toBe(true);
     expect(result.state.gameOver).toBe(true);
+  });
+
+  it('moves the visual tower tilt toward the current balance with spring momentum', () => {
+    const first = advanceTowerSway(0, 0, 0.5, 0.05);
+    expect(first.tilt).toBeGreaterThan(0);
+    expect(first.velocity).toBeGreaterThan(0);
+    const returning = advanceTowerSway(first.tilt, first.velocity, -0.5, 0.05);
+    expect(returning.velocity).toBeLessThan(first.velocity);
   });
 });

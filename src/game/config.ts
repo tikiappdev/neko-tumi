@@ -11,6 +11,9 @@ export const BALANCE_WIDTH_PATTERN = [168, 124, 196, 108, 178, 92, 148, 204, 116
 export const BALANCE_MEMORY = 0.72;
 export const PERFECT_BALANCE_RECOVERY = 0.35;
 export const BALANCE_TOPPLE_LIMIT = 0.72;
+export const MAX_TOWER_TILT_DEGREES = 16;
+export const SWAY_SPRING = 15;
+export const SWAY_DAMPING = 4.8;
 
 import type { GameMode } from './types';
 
