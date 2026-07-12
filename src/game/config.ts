@@ -8,6 +8,9 @@ export const PERFECT_BONUS = 100;
 export const COMBO_STEP_BONUS = 50;
 export const MAX_COMBO_BONUS = 250;
 export const BALANCE_WIDTH_PATTERN = [168, 124, 196, 108, 178, 92, 148, 204, 116, 184] as const;
+export const BALANCE_MEMORY = 0.72;
+export const PERFECT_BALANCE_RECOVERY = 0.35;
+export const BALANCE_TOPPLE_LIMIT = 0.72;
 
 import type { GameMode } from './types';
 

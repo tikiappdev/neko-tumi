@@ -8,7 +8,7 @@ type Phase = 'moving' | 'dropping' | 'settling' | 'gameOver'
 type Effect = 'perfect' | 'combo' | 'best' | 'miss' | null
 export interface CompletedGame { score: number; floor: number; maxPerfectCombo: number }
 const FLOOR_STEP = 23
-const ACTIVE_Y = 270
+const ACTIVE_Y = 230
 const catAt = (ids: CatId[], index: number): CatId => ids[index % Math.max(1, ids.length)] ?? 'white'
 
 export function useGame(mode: GameMode, unlockedCatIds: CatId[], bestScore: number, onComplete: (game: CompletedGame) => void) {
@@ -71,13 +71,19 @@ export function useGame(mode: GameMode, unlockedCatIds: CatId[], bestScore: numb
       const placed: ViewBlock = { id: `${placedFloor}-${kind}`, x: result.placement.block.x, y: 4, width: result.placement.block.width, kind: kind as CatKind, state: result.placement.perfect ? 'perfect' : 'landing' }
       setBlocks((current) => [...current, placed].slice(-10).map((block, i) => ({ ...block, y: i * FLOOR_STEP + 4 })))
       updateGame(result.state)
+      if (result.toppled) {
+        setEffect('miss'); setAnnouncement(`バランスが ${result.state.balance > 0 ? 'みぎ' : 'ひだり'}に くずれた！`); updatePhase('gameOver')
+        later(() => onCompleteRef.current({ score: result.state.score, floor: result.state.floor, maxPerfectCombo: result.state.maxCombo }), 650)
+        return
+      }
       setEffect(result.placement.perfect ? (result.state.combo > 1 ? 'combo' : 'perfect') : (result.state.score > bestScore ? 'best' : null))
-      setAnnouncement(result.placement.perfect ? `ぴったり！ ${result.state.combo}れんぞく、${result.gained}てん` : `${result.state.floor}だん、${result.gained}てん`)
+      const balanceHint = result.state.mode === 'balance' && Math.abs(result.state.balance) > 0.22 ? `。${result.state.balance > 0 ? 'みぎ' : 'ひだり'}に かたむいているよ` : ''
+      setAnnouncement((result.placement.perfect ? `ぴったり！ ${result.state.combo}れんぞく、${result.gained}てん` : `${result.state.floor}だん、${result.gained}てん`) + balanceHint)
       updatePhase('settling'); later(() => { setActiveY(ACTIVE_Y); setEffect(null); updatePhase('moving') }, 300)
     }, 170)
   }, [bestScore, later, unlockedCatIds, updateGame])
 
   const activeKind = catAt(unlockedCatIds, game.floor)
-  const active: ViewBlock = { id: `active-${game.floor}`, x: game.moving.x, y: activeY, width: game.moving.width, kind: activeKind as CatKind, state: phase === 'gameOver' ? 'falling' : phase === 'dropping' ? 'landing' : 'settled' }
+  const active: ViewBlock | null = phase === 'gameOver' && game.balance !== 0 ? null : { id: `active-${game.floor}`, x: game.moving.x, y: activeY, width: game.moving.width, kind: activeKind as CatKind, state: phase === 'gameOver' ? 'falling' : phase === 'dropping' ? 'landing' : 'settled' }
   return { game, blocks, active, phase, effect, announcement, background: backgroundForFloor(game.floor), drop, reset }
 }

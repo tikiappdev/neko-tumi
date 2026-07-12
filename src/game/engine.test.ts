@@ -56,4 +56,27 @@ describe('game engine', () => {
     expect(result.perfect).toBe(true);
     expect(result.block).toEqual({ x: 118, width: 124 });
   });
+
+  it('keeps the full cat width after landing in balance mode', () => {
+    const result = judgePlacement({ x: 60, width: 196 }, { x: 96, width: 168 }, 3, 'balance');
+    expect(result.success).toBe(true);
+    expect(result.block).toEqual({ x: 60, width: 196 });
+  });
+
+  it('lets an opposite placement recover the tower balance', () => {
+    const initial = createInitialGameState('balance');
+    const leaningLeft = placeMovingCat({ ...initial, moving: { ...initial.moving, x: 50 } });
+    expect(leaningLeft.state.balance).toBeLessThan(-0.2);
+    const recovered = placeMovingCat({ ...leaningLeft.state, moving: { ...leaningLeft.state.moving, x: 110 } });
+    expect(Math.abs(recovered.state.balance)).toBeLessThan(0.1);
+    expect(recovered.toppled).toBe(false);
+  });
+
+  it('topples when a balance-mode cat lands too far on the edge', () => {
+    const initial = createInitialGameState('balance');
+    const result = placeMovingCat({ ...initial, moving: { ...initial.moving, x: 240 } });
+    expect(result.placement.success).toBe(true);
+    expect(result.toppled).toBe(true);
+    expect(result.state.gameOver).toBe(true);
+  });
 });

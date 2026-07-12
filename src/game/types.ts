@@ -40,6 +40,7 @@ export type BackgroundStage = 'ground' | 'town' | 'clouds' | 'sunset' | 'night' 
 
 export interface GameState {
   mode: GameMode;
+  balance: number;
   support: CatBlock;
   moving: MovingCat;
   floor: number;
@@ -53,4 +54,5 @@ export interface DropResult {
   state: GameState;
   placement: PlacementResult;
   gained: number;
+  toppled: boolean;
 }

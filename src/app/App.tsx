@@ -43,7 +43,7 @@ export function App() {
   }, [game.effect, game.phase, player.soundEnabled, screen])
 
   if (screen === 'howto') return <HowToScreen onBack={() => setScreen('title')} onStart={start} />
-  if (screen === 'game') return <GameScreen score={game.game.score} floors={game.game.floor} bestScore={player.bestScore} combo={game.game.combo} modeLabel={mode === 'balance' ? '⚖️ バランス' : undefined} soundEnabled={player.soundEnabled} onToggleSound={toggleSound} onExit={exitGame} blocks={game.blocks} active={game.active} background={game.background} onDrop={() => { playSound('drop', player.soundEnabled); game.drop() }} disabled={game.phase !== 'moving'} announcement={game.announcement} effect={game.effect} />
+  if (screen === 'game') return <GameScreen score={game.game.score} floors={game.game.floor} bestScore={player.bestScore} combo={game.game.combo} modeLabel={mode === 'balance' ? '⚖️ バランス' : undefined} balance={mode === 'balance' ? game.game.balance : undefined} soundEnabled={player.soundEnabled} onToggleSound={toggleSound} onExit={exitGame} blocks={game.blocks} active={game.active} background={game.background} onDrop={() => { playSound('drop', player.soundEnabled); game.drop() }} disabled={game.phase !== 'moving'} announcement={game.announcement} effect={game.effect} />
   if (screen === 'result' && result) return <ResultScreen score={result.score} floors={result.floors} isNewBest={result.isNewBest} unlockedCat={result.unlocked} onRetry={start} onTitle={() => setScreen('title')} />
   return <TitleScreen best={best} mode={mode} soundEnabled={player.soundEnabled} onModeChange={setMode} onToggleSound={toggleSound} onStart={start} onHowTo={() => setScreen('howto')} featuredCat={(player.unlockedCatIds.at(-1) ?? 'white') as CatKind} />
 }
