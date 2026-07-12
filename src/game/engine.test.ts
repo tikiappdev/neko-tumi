@@ -38,4 +38,22 @@ describe('game engine', () => {
     expect(result.placement.success).toBe(false);
     expect(result.state.gameOver).toBe(true);
   });
+
+  it('alternates large and small cats in balance mode', () => {
+    const initial = createInitialGameState('balance');
+    const first = placeMovingCat({ ...initial, moving: { ...initial.moving, x: 96 } });
+    expect(first.state.mode).toBe('balance');
+    expect(first.state.moving.width).toBe(124);
+
+    const centeredX = first.state.support.x + first.state.support.width / 2 - first.state.moving.width / 2;
+    const second = placeMovingCat({ ...first.state, moving: { ...first.state.moving, x: centeredX } });
+    expect(second.state.moving.width).toBe(196);
+    expect(second.placement.perfect).toBe(true);
+  });
+
+  it('uses center alignment for differently sized cats', () => {
+    const result = judgePlacement({ x: 118, width: 124 }, { x: 96, width: 168 }, 2);
+    expect(result.perfect).toBe(true);
+    expect(result.block).toEqual({ x: 118, width: 124 });
+  });
 });

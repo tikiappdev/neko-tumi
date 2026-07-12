@@ -29,4 +29,11 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /音をオフ/ }))
     expect(localStorage.getItem('neko-tsumi-tower:player-data')).toContain('"soundEnabled":false')
   })
+  it('starts the harder balance mode', async () => {
+    const user = userEvent.setup(); render(<App />)
+    await user.click(screen.getByRole('button', { name: /バランス/ }))
+    expect(screen.getByRole('button', { name: /バランスで あそぶ/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /バランスで あそぶ/ }))
+    expect(screen.getByText('⚖️ バランス')).toBeInTheDocument()
+  })
 })

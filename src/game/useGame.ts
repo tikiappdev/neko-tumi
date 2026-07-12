@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { advanceMovingCat, createInitialGameState, placeMovingCat } from './engine'
 import { backgroundForFloor } from './unlocks'
-import type { CatId, GameState } from './types'
+import type { CatId, GameMode, GameState } from './types'
 import type { CatBlock as ViewBlock, CatKind } from '../components/types'
 
 type Phase = 'moving' | 'dropping' | 'settling' | 'gameOver'
@@ -11,8 +11,8 @@ const FLOOR_STEP = 23
 const ACTIVE_Y = 270
 const catAt = (ids: CatId[], index: number): CatId => ids[index % Math.max(1, ids.length)] ?? 'white'
 
-export function useGame(unlockedCatIds: CatId[], bestScore: number, onComplete: (game: CompletedGame) => void) {
-  const [game, setGame] = useState<GameState>(createInitialGameState)
+export function useGame(mode: GameMode, unlockedCatIds: CatId[], bestScore: number, onComplete: (game: CompletedGame) => void) {
+  const [game, setGame] = useState<GameState>(() => createInitialGameState(mode))
   const gameRef = useRef(game)
   const [phase, setPhase] = useState<Phase>('moving')
   const phaseRef = useRef<Phase>('moving')
@@ -33,7 +33,7 @@ export function useGame(unlockedCatIds: CatId[], bestScore: number, onComplete: 
       const elapsed = Math.min(0.05, Math.max(0, (now - previous) / 1000)); previous = now
       if (phaseRef.current === 'moving') {
         const current = gameRef.current
-        updateGame({ ...current, moving: advanceMovingCat(current.moving, elapsed, current.floor) })
+        updateGame({ ...current, moving: advanceMovingCat(current.moving, elapsed, current.floor, current.mode) })
       }
       frame = requestAnimationFrame(tick)
     }
@@ -51,9 +51,9 @@ export function useGame(unlockedCatIds: CatId[], bestScore: number, onComplete: 
 
   const reset = useCallback(() => {
     timeoutIds.current.forEach(window.clearTimeout); timeoutIds.current = []
-    updateGame(createInitialGameState()); setBlocks([]); setActiveY(ACTIVE_Y); setEffect(null)
+    updateGame(createInitialGameState(mode)); setBlocks([]); setActiveY(ACTIVE_Y); setEffect(null)
     setAnnouncement('ねこが うごいています。タップで おとそう！'); updatePhase('moving')
-  }, [updateGame])
+  }, [mode, updateGame])
 
   const drop = useCallback(() => {
     if (phaseRef.current !== 'moving') return

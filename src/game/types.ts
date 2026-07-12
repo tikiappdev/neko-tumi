@@ -1,4 +1,5 @@
 export type Direction = -1 | 1;
+export type GameMode = 'normal' | 'balance';
 
 export type CatId =
   | 'white'
@@ -38,6 +39,7 @@ export interface ScoreResult {
 export type BackgroundStage = 'ground' | 'town' | 'clouds' | 'sunset' | 'night' | 'space';
 
 export interface GameState {
+  mode: GameMode;
   support: CatBlock;
   moving: MovingCat;
   floor: number;
